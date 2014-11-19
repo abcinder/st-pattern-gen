@@ -1,0 +1,2 @@
+def parseBooleanString(string):
+    return string[0].upper() == 'T'

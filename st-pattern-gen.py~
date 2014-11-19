@@ -13,13 +13,12 @@ import argparse
 from operator import itemgetter
 from configobj import ConfigObj
 import commands #for detecting caps lock
+import afunc #Anton's functions
+import EagleCLI as ea
 
 DELAY = 0.5
 
 ''' MISC FUNCTIONS '''
-
-def parseBooleanString(string):
-    return string[0].upper() == 'T'
 
 def multikeysort(items, columns):
     #from operator import itemgetter
@@ -50,10 +49,6 @@ def pipDict(x, y, poly):
         p1x,p1y = p2x,p2y
 
     return inside
-
-def printList(list):
-    for num, item in enumerate(list):
-        print num, ' ', item
         
 def runScript(delay, SCRIPT_PATH, SCRIPT_NAME):
     screen = wnck.screen_get(0)
@@ -106,23 +101,23 @@ def runScript(delay, SCRIPT_PATH, SCRIPT_NAME):
     #Delay needed to let Eagle process the script before it is deleted.
     time.sleep(3)
     #Remove generated Eagle script. These just add clutter. Just keep the .ini files.
-    removeFile(SCRIPT_PATH + "/" + SCRIPT_NAME)
+    removeFile(SCRIPT_PATH + SCRIPT_NAME)
     
 ''' FILE I/O '''
 
 def openFile(name):
     name = str(name)
     file = open(name, 'wb')
-    print "Name of the file: ", file.name
+    print "Created file: ", file.name
     OddRow = True
-    
     return file
 
 def closeFile(file):
     file.close()
-    print "Closed or not : ", file.closed
+    print "Closed file: " + file.name
 
 def removeFile(path):
+    print "Removed file: " + path
     os.remove(path)
 
 ''' EXPLICIT EAGLE FUNCTIONS '''
@@ -1562,24 +1557,24 @@ TPAD_POUR_SPACING = float(config['pads']['fillSpacing'])
 TPAD_MAX_DIM = max(TPAD_W, TPAD_H)
 TPAD_SPACING_DIM = float(config['pads']['padDimForSpacing'])
 TPAD_SHAPE = str(config['pads']['shape'])
-TPAD_LABEL_ENABLED = parseBooleanString(config['pads']['labels'])
+TPAD_LABEL_ENABLED = afunc.parseBooleanString(config['pads']['labels'])
 VIA_UNIT = str(config['pads']['viaUnit'])
 VIA_DRILL_SIZE = float(config['pads']['viaDrill'])
 
-TOP_PAD_ENABLED = parseBooleanString(config['pads']['topPads'])
+TOP_PAD_ENABLED = afunc.parseBooleanString(config['pads']['topPads'])
 TOP_PAD_SHAPE = str(config['pads']['topPadShape'])
 TOP_PAD_SIZE = float(config['pads']['topSize'])
 
 TRACE_W = float(config['traces']['w'])
 TRACE_P_MULTIPLIER = float(config['traces']['pitchMultiplier'])
 TRACE_P = TRACE_P_MULTIPLIER*TRACE_W
-MULTIPLE_LAYERS = parseBooleanString(config['traces']['multipleLayers'])
+MULTIPLE_LAYERS = afunc.parseBooleanString(config['traces']['multipleLayers'])
 
 routing = config['traces']['routing']
-setPitch = parseBooleanString(config['size']['setPitch'])
+setPitch = afunc.parseBooleanString(config['size']['setPitch'])
 pitch = float(config['size']['pitch'])
 
-MILLED = parseBooleanString(config['pads']['milled'])
+MILLED = afunc.parseBooleanString(config['pads']['milled'])
 MILLED_WIDTH = float(config['pads']['milledWidth'])
 
 col = int(config['pads']['col'])
@@ -1618,7 +1613,7 @@ triH = (0.6)*SCR_H/2
 horzW = vi - TPAD_MAX_DIM/2
 vertW = vi - 10
 
-CONN_ENABLED = parseBooleanString(config['connectors']['enabled'])
+CONN_ENABLED = afunc.parseBooleanString(config['connectors']['enabled'])
 CONN_PKG = config['connectors']['type']
 CONN_PADPERROW = int(config['connectors'][str(CONN_PKG)]['padPerRow'])
 CONN_ROWCOUNT = int(config['connectors'][str(CONN_PKG)]['rowCount'])
@@ -1632,11 +1627,11 @@ CONN_XOFF = float(config['connectors'][str(CONN_PKG)]['xoffset'])
 CONN_YOFF = float(config['connectors'][str(CONN_PKG)]['yoffset'])
 CONN_ROTATION = float(config['connectors'][str(CONN_PKG)]['r'])
 
-gridDisplay = parseBooleanString(config['traces']['gridDisplay'])
-TRACES_ENABLED = parseBooleanString(config['traces']['enabled'])
-SWITCHES_ENABLED = parseBooleanString(config['switches']['enabled'])
+gridDisplay = afunc.parseBooleanString(config['traces']['gridDisplay'])
+TRACES_ENABLED = afunc.parseBooleanString(config['traces']['enabled'])
+SWITCHES_ENABLED = afunc.parseBooleanString(config['switches']['enabled'])
 
-PACKED = parseBooleanString(config['switches']['packed'])
+PACKED = afunc.parseBooleanString(config['switches']['packed'])
 RELAY_PKG = config['switches']['type']
 RELAY_ANGLE = float(config['switches'][str(RELAY_PKG)]['angle'])
 RELAY_XOFF = float(config['switches'][str(RELAY_PKG)]['xoffset'])
@@ -1807,7 +1802,4 @@ closeFile(out)
 printInfo()
 
 ''' RUN THE SCRIPT '''
-print "haven't run script yet"
 runScript(DELAY, SCRIPT_PATH, SCRIPT_NAME)
-
-
