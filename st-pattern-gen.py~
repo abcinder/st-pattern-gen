@@ -2,6 +2,7 @@ import pygtk
 pygtk.require('2.0')
 import time
 import math
+import os, sys
 import re
 import gtk
 import wnck
@@ -101,6 +102,11 @@ def runScript(delay, SCRIPT_PATH, SCRIPT_NAME):
     
     if caps_flag:
         k.tap_key(k.caps_lock_key)
+
+    #Delay needed to let Eagle process the script before it is deleted.
+    time.sleep(3)
+    #Remove generated Eagle script. These just add clutter. Just keep the .ini files.
+    removeFile(SCRIPT_PATH + "/" + SCRIPT_NAME)
     
 ''' FILE I/O '''
 
@@ -116,6 +122,8 @@ def closeFile(file):
     file.close()
     print "Closed or not : ", file.closed
 
+def removeFile(path):
+    os.remove(path)
 
 ''' EXPLICIT EAGLE FUNCTIONS '''
 
@@ -1799,4 +1807,7 @@ closeFile(out)
 printInfo()
 
 ''' RUN THE SCRIPT '''
+print "haven't run script yet"
 runScript(DELAY, SCRIPT_PATH, SCRIPT_NAME)
+
+
