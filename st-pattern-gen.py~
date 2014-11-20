@@ -98,28 +98,7 @@ def runScript(delay, SCRIPT_PATH, SCRIPT_NAME):
     if caps_flag:
         k.tap_key(k.caps_lock_key)
 
-    #Delay needed to let Eagle process the script before it is deleted.
-    time.sleep(3)
-    #Remove generated Eagle script. These just add clutter. Just keep the .ini files.
-    removeFile(SCRIPT_PATH + SCRIPT_NAME)
     
-''' FILE I/O '''
-
-def openFile(name):
-    name = str(name)
-    file = open(name, 'wb')
-    print "Created file: ", file.name
-    OddRow = True
-    return file
-
-def closeFile(file):
-    file.close()
-    print "Closed file: " + file.name
-
-def removeFile(path):
-    print "Removed file: " + path
-    os.remove(path)
-
 ''' EXPLICIT EAGLE FUNCTIONS '''
 
 #def add(dev, lib, r='0', x=0, y=0):
@@ -1053,14 +1032,14 @@ def pipLeft(x, y):
         return True
         
 def printInfo():
+    print ''
     print "Pad Size:", TPAD_H
     print "Row:", row, "\b, Col:", col
     print "Screen Dim - X:", SCR_W, "\b, Y:", SCR_H
     print "Board Dim - X:", boardW, "\b, Y:", boardH
     print "Pad Pitch - X:", tPadPx, "\b, Y:", tPadPy
     print 'Packed:', PACKED
-    #print "tPad pitch y: ", tPadPy
-    #print "sq in:", (SCR_W/25.4)*(SCR_H/25.4)
+    print ''
         
 def inGrid(grid, TPs):
     validPts = []
@@ -1645,7 +1624,6 @@ PACK_ROW = int(config['switches'][str(RELAY_PKG)]['packrow'])
 
 SOFT_TOUCH_LIBRARY = 'soft_touch.lbr'
 
-
 class grid2Polys(object):
     def __init__(self):
         pass
@@ -1760,7 +1738,7 @@ tGrid = grid2Polys()
     
 ''' CREATE EAGLE SCRIPT '''
 
-out = openFile(SCRIPT_NAME)
+out = afunc.openFile(SCRIPT_NAME)
 
 setVectorFont()
 clearBoard()
@@ -1797,9 +1775,14 @@ window('FIT')
 
 #add('vssop_aqy221', 'vssop_aqy221', 'soft_touch_lbr')
 
-closeFile(out)
+afunc.closeFile(out)
 
 printInfo()
 
 ''' RUN THE SCRIPT '''
 runScript(DELAY, SCRIPT_PATH, SCRIPT_NAME)
+
+#Delay needed to let Eagle process the script before it is deleted.
+time.sleep(3)
+#Remove generated Eagle script. These just add clutter. Just keep the .ini files.
+afunc.removeFile(SCRIPT_PATH + SCRIPT_NAME)
