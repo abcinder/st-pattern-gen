@@ -23,4 +23,5 @@ def closeFile(file):
 def removeFile(path):
     print ''
     print "Removed file: " + path
+    print ''
     os.remove(path)

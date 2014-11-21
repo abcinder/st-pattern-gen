@@ -1,0 +1,34 @@
+type = driver
+
+[name]
+scriptName = Driver Test
+scriptPath = /home/antonbilbaeno/proj/st/pattern/
+
+[driver]
+touchPoints = 48
+sides = 2
+row = 4
+col = 6
+IC = MAX4820
+relay = COTO9901
+conn = BOX-10P-D-RA
+
+[board]
+pour = 0.5 #oz
+traceWidth = 0.008 #in
+traceSpacing = 0.008 #in
+thickness = 0.062 #in
+
+[finger]
+finish = ASTM B488 TYPE 2, GRADE C
+width = 0.024 #in
+height = 0.175 #in
+pitch = 0.0394 #in
+topClearance = 0.120 #in
+sideEdgeToPadOrigin = 0.0541 #in
+sideClearance = 0.0421 #0.0541-padWidth/2
+bevelHeight = 0.055
+polarized = F
+cutLoc = 0.00
+cutWidth = 0.00
+cutDepth = 0.00

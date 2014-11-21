@@ -14,7 +14,8 @@ from operator import itemgetter
 from configobj import ConfigObj
 import commands #for detecting caps lock
 import afunc #Anton's functions
-import EagleCLI as ea
+import EagleCLI as eCLI
+import stParameters as stPARA
 
 DELAY = 0.5
 
@@ -558,12 +559,12 @@ def wireBoxWH(w, h, l=20, width=0.01):
 ''' PATTERN SPECIFIC FUNCTIONS '''
 
 def createAllCustomLayers():
-    layer(TRACE_TOP_LAYER, 'TRACETOP')
-    layer(TRACE_MID_LAYER, 'TRACEMID')
-    layer(TRACE_BOT_LAYER, 'TRACEBOT')
-    layer(TPAD_LAYER, 'TPAD')
-    layer(TPAD_LABEL_LAYER, 'TPADLABEL')
-    layer(GRID_TOP_LAYER, 'TOPGRID')
+    layer(stPARA.LAYER_TRACE_TOP, 'TRACETOP')
+    layer(stPARA.LAYER_TRACE_MID, 'TRACEMID')
+    layer(stPARA.LAYER_TRACE_BOT, 'TRACEBOT')
+    layer(stPARA.LAYER_TPAD, 'TPAD')
+    layer(stPARA.LAYER_TPAD_LABEL, 'TPADLABEL')
+    layer(stPARA.LAYER_GRID_TOP, 'TOPGRID')
 
 def drawBoard(routing):
 
@@ -775,30 +776,15 @@ def drawAllBorders():
     if MILLED:
         drawMilledBorder(MILLED_WIDTH, SCR_W, SCR_H, row, col, tPadPx, TPAD_H)
     else:
-        drawBorder(SCR_W, SCR_H, TPLACE_LAYER)
-        drawBorder(traceExtW, traceExtH, TPLACE_LAYER)
-        drawBorder(routeW, routeH, TPLACE_LAYER)
-        drawBorder(boardW, boardH, DIMENSION_LAYER)
+        drawBorder(SCR_W, SCR_H, stPARA.LAYER_TPLACE)
+        drawBorder(traceExtW, traceExtH, stPARA.LAYER_TPLACE)
+        drawBorder(routeW, routeH, stPARA.LAYER_TPLACE)
+        drawBorder(boardW, boardH, stPARA.LAYER_DIMENSION)
     
 def drawAllGrids():
     for item in tGrid.TT:
         drawPolygonDict(item, GRID_TOP_LAYER)
 
-def hideTopLayer():
-    display(-TPAD_LAYER)
-    display(-mPadTopLayer)
-    display(-TRACE_TOP_LAYER)
-    display(-GRID_TOP_LAYER)
-    
-def hideBotLayer():
-    display(-tPadBotLayer)
-    display(-mPadBotLayer)
-    display(-traceBotLayer)
-    display(-GRID_BOT_LAYER)
-
-def hideTPADLayer():
-    display(-TPAD_LAYER)
-    
 def labelBoard():
     #Board title top left corner
     title = config['name']['title']
@@ -818,16 +804,9 @@ def labelBoard():
         text(trace_string, float(boardW/2-0.5), float(-boardH/2+1.5), 1, orientation='R180')
 
 def showTopLayer():
-    display(TPAD_LAYER)
-    display(mPadTopLayer)
-    display(TRACE_TOP_LAYER)
-    display(GRID_TOP_LAYER)
-
-def showBotLayer():
-    display(tPadBotLayer)
-    display(mPadBotLayer)
-    display(traceBotLayer)
-    display(GRID_BOT_LAYER)
+    display(stPARA.TPAD_LAYER)
+    display(stPARA.TRACE_TOP_LAYER)
+    display(stPARA.GRID_TOP_LAYER)
 
 def touchPos(col, row, padDim, scrW, scrH):
     posList = []
@@ -1272,8 +1251,8 @@ def matingPosGrid(accumPts, pitch, tPadMaxDim):
     return matingPts
 
 def drawSide(allPtPairs, TPAD_W, TPAD_H, TRACE_W):
-    padLayer = TPAD_LAYER
-    traceLayer = TRACE_TOP_LAYER
+    padLayer = stPARA.LAYER_TPAD
+    traceLayer = stPARA.LAYER_TRACE_TOP
     text_size = 0.8
     
     sortedPairs = sorted(allPtPairs, key=itemgetter('ty'))
@@ -1313,13 +1292,13 @@ def drawSide(allPtPairs, TPAD_W, TPAD_H, TRACE_W):
             wire(pair['tx'], pair['ty'], float(float(pair['tx'])+float(RELAY_XOFF)), float(float(pair['ty'])+float(RELAY_YOFF)), TRACE_W)
                     
         if TPAD_LABEL_ENABLED:
-            text(str(num), pair['tx']-0.8, pair['ty']+(TOP_PAD_SIZE/2), text_size, TPAD_LABEL_LAYER) 
+            text(str(num), pair['tx']-0.8, pair['ty']+(TOP_PAD_SIZE/2), text_size, stPARA.LABEL_TPAD_LABEL)
         
 def drawGrid(allPtPairs, TPAD_W, TPAD_H, TRACE_W):
     
     mult = 0.45
-    padLayer = TPAD_LAYER
-    traceLayer = TRACE_BOT_LAYER
+    padLayer = stPARA.LAYER_TPAD
+    traceLayer = stPARA.LAYER_TRACE_TOP
     counter = 0
     text_size = 0.8
     
@@ -1496,21 +1475,6 @@ def packedSwitches():
             addPkg(RELAY_PKG, 'soft_touch.lbr', flip*RELAY_ANGLE, x, y)
             #via_noNet(x, y, 10, 0, 'round', 1, 16)
             
-        
-''' EAGLE PARAMETERS '''
-
-DIMENSION_LAYER = 20
-TPLACE_LAYER = 21
-REFERENCE_LAYER = 49
-TDOCU_LAYER = 51
-TRACE_TOP_LAYER = 101
-TRACE_MID_LAYER = 102
-TRACE_BOT_LAYER = 115
-TPAD_LAYER = 116
-TPAD_LABEL_LAYER = 117
-GRID_TOP_LAYER = 121
-GRID_BOT_LAYER = 122
-
 
 ''' PATTERN PARAMETERS '''
 
@@ -1522,12 +1486,12 @@ CONFIGURATION_FILE_NAME = args.cfg
 config = ConfigObj(file_error=True)
 config.filename = CONFIGURATION_FILE_NAME
 config.reload()
+
 #config = ConfigParser.SafeConfigParser()
 #config.read(CONFIGURATION_FILE_NAME)
 
 SCRIPT_NAME = config['name']['scriptName']
 SCRIPT_PATH = config['name']['scriptPath']
-#SCRIPT_NAME = config.get('name', 'scriptName')
 
 TPAD_W = float(config['pads']['size'])
 TPAD_H = float(config['pads']['size'])
@@ -1622,7 +1586,7 @@ PKG_H = float(config['switches'][str(RELAY_PKG)]['pkgh'])
 PACK_COL = int(config['switches'][str(RELAY_PKG)]['packcol'])
 PACK_ROW = int(config['switches'][str(RELAY_PKG)]['packrow'])
 
-SOFT_TOUCH_LIBRARY = 'soft_touch.lbr'
+
 
 class grid2Polys(object):
     def __init__(self):
@@ -1753,7 +1717,7 @@ if PACKED:
     packedSwitches()
 
 if CONN_ENABLED:
-    addPkg(CONN_PKG, 'soft_touch.lbr', CONN_ROTATION, CONN_XOFF, CONN_YOFF)
+    addPkg(CONN_PKG, 'soft_touch_lbr', CONN_ROTATION, CONN_XOFF, CONN_YOFF)
     fanout(padPerRow=CONN_PADPERROW,
         rowCount=CONN_ROWCOUNT,
         dist=CONN_DIST,
