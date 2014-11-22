@@ -785,7 +785,7 @@ def drawAllGrids():
     for item in tGrid.TT:
         drawPolygonDict(item, GRID_TOP_LAYER)
 
-def labelBoard():
+def labelBackplane():
     #Board title top left corner
     title = config['name']['title']
     text(title, float(-boardW/2+0.5), float(boardH/2-1.5), 1)
@@ -1731,7 +1731,7 @@ if CONN_ENABLED:
         r=CONN_ROTATION,
         units='mm')
     
-labelBoard()
+labelBackplane()
 window('FIT')
 #hideTopLayer()
 #hideBotLayer()

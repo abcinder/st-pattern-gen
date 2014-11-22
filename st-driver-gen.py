@@ -1,9 +1,9 @@
+import time
 import ConfigParser
 import argparse
 from configobj import ConfigObj
 import logging
 import EagleCLI as eCLI #Eagle Command Line Interface module
-import stParameters as stPARA #Constant variables related to Soft Touch
 import afunc as aFUN #Anton's misc. functions
 
 #Create logger
@@ -80,3 +80,45 @@ if FINGER_POLARIZED:
     logging.info('Cut Width: ' + str(FINGER_CUT_WIDTH))
     logging.info('Cut Depth: ' + str(FINGER_CUT_DEPTH))
 
+''' DRIVER SPECIFIC FUNCTIONS '''
+
+    
+''' CREATE EAGLE SCRIPT '''
+#Open .scr file
+out = aFUN.openFile(SCRIPT_NAME + '.scr')
+
+out.write(eCLI.setVectorFont())
+out.write(eCLI.clearBoard())
+out.write(eCLI.createAllCustomLayers())
+
+out.write(eCLI.grid(unit='in', value=0.006, toggle='on'))
+out.write(eCLI.goldFingerDimensions(pads=DRIVER_POINTS,
+    padW=FINGER_WIDTH,
+    padH=FINGER_HEIGHT,
+    padP=FINGER_PITCH,
+    top=FINGER_TOPCLEARANCE,
+    side=FINGER_SIDECLEARANCE,
+    bevel=FINGER_BEVEL))
+out.write(eCLI.goldFingerPads(pads=DRIVER_POINTS,
+    padW=FINGER_WIDTH,
+    padH=FINGER_HEIGHT,
+    padP=FINGER_PITCH,
+    top=FINGER_TOPCLEARANCE,
+    side=FINGER_SIDECLEARANCE,
+    bevel=FINGER_BEVEL))
+
+RELAY_CLEARANCE = 1.00
+
+out.write(eCLI.placeDriver(0, RELAY_CLEARANCE))
+
+out.write(eCLI.window('FIT'))
+
+#Close file
+aFUN.closeFile(out)
+
+#Run Eagle script
+eCLI.runScript(0.5, SCRIPT_PATH, SCRIPT_NAME + '.scr')
+
+#Remove generated Eagle script. These just add clutter. Just keep the .ini files.
+time.sleep(3) #Delay needed to let Eagle process the script before it is deleted.
+# aFUN.removeFile(SCRIPT_PATH + SCRIPT_NAME + '.scr')

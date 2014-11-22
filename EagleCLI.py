@@ -1,14 +1,174 @@
+import commands
+import time
+import re
+import gtk
+import wnck
+from pykeyboard import PyKeyboard
+from pymouse import PyMouse
+import stParameters as stPARA #Constant variables related to Soft Touch
+from xml.dom import minidom
+
+''' EAGLE SPECIFIC MACROS '''
+
+def runScript(delay, SCRIPT_PATH, SCRIPT_NAME):
+    screen = wnck.screen_get(0)
+    #screen = wnck.screen_get_default()
+
+    while gtk.events_pending():
+        gtk.main_iteration()
+
+    windowTitle = re.compile('.*Board.*')
+
+    for window in screen.get_windows():
+        if windowTitle.match(window.get_name()):
+            window.activate(int(time.time()))
+            window.maximize()
+
+    #MOUSE CLICK TO ACTUALLY FOCUS EAGLE BOARD
+    m = PyMouse()
+    x, y = m.screen_size()
+    #m.click(x/4, y/4, 1)
+
+    #KEYBOARD INPUT
+    k = PyKeyboard()
+
+    caps_flag = 0
+    if int(commands.getoutput('xset q | grep LED')[65]) % 2:
+        k.tap_key(k.caps_lock_key)
+        caps_flag = 1
+
+    #BRING UP ALT-FILE MENU
+    k.press_key(k.alt_key)
+    k.type_string('f')
+    k.release_key(k.alt_key)
+
+    #PRESS T TO RUN SCRIPT FROM ALT-FILE MENUs
+    k.type_string('t')
+
+    time.sleep(delay)
+
+    #TYPE IN SCRIPT NAME TO DIALOG BOX
+    k.type_string(SCRIPT_PATH + SCRIPT_NAME)
+
+    time.sleep(delay)
+    time.sleep(delay)
+
+    k.tap_key(k.enter_key)
+
+    if caps_flag:
+        k.tap_key(k.caps_lock_key)
+
+
+''' EAGLE MACROS '''
+def setVectorFont(setting='on'):
+    return set('VECTOR_FONT', setting)
+
+def clearBoard():
+    return switchToBoard() + \
+        clearDrawing(2000)
+
+def clearDrawing(size):
+    return grid(unit='mm', value=0.5, toggle='on') + \
+        display('ALL') + \
+        group(size) + \
+        delete(0,0,'r')
+
+def createAllCustomLayers():
+    return layer(stPARA.LAYER_TRACE_TOP, 'TRACETOP') + \
+        layer(stPARA.LAYER_TRACE_MID, 'TRACEMID') + \
+        layer(stPARA.LAYER_TRACE_BOT, 'TRACEBOT') + \
+        layer(stPARA.LAYER_TPAD, 'TPAD') + \
+        layer(stPARA.LAYER_TPAD_LABEL, 'TPADLABEL') + \
+        layer(stPARA.LAYER_GRID_TOP, 'TOPGRID')
+
+def goldFingerDimensions(pads, padW, padH, padP, top, side, bevel):
+    output = ''
+    width = (pads * padP) + padW + side
+    height = padH + top + bevel
+    output += drawBoxAtLocation(0, height/2, width, height, l=stPARA.LAYER_TPLACE)
+    output += drawBoxAtLocation(0, bevel/2, width, bevel, l=stPARA.LAYER_TPLACE)
+    output += drawBoxAtLocation(0, height-top/2, width, top, l=stPARA.LAYER_TPLACE)
+    return output
+
+def goldFingerPads(pads, padW, padH, padP, top, side, bevel):
+    output = ''
+    for i in range(pads):
+        x1 = -padP*(pads/2) + i*padP + (padP-padW)/2
+        y1 = bevel
+        x2 = x1 + padW
+        y2 = y1 + padH
+        output += rect(x1, y1, x2, y2, l=1)
+        output += rect(x1, y1, x2, y2, l=29)
+        output += rect(x1, y1, x2, y2, l=16)
+        output += rect(x1, y1, x2, y2, l=30)
+    return output
+
+def relayDriverDimensions(pads, padW, padH, padP, top, side, bevel):
+    #doc = minidom.parse('~/eagle6.6.0/lbr/soft_touch.lbr')
+    #packages = doc.getE
+    output = ''
+    #output += drawBoxAtLocation(0, padH + top + bevel, 
+    return outputs
+
+def placeDriver(x, y):
+    output = ''
+    output += addPkg('TQFN20', 'soft_touch.lbr', 0, x, y)
+
+    doc = minidom.parse('/home/antonbilbaeno/eagle-6.6.0/lbr/soft_touch.lbr')
+    packages = doc.getElementsByTagName('package')
+    for package in packages:
+        if package.getAttribute('name') == 'TQFN20':
+            name = package.getAttribute('name')
+            print name
+            smds = package.getElementsByTagName('smd')
+            for smd in smds:
+                print smd.getAttribute('name'), smd.getAttribute('x'), smd.getAttribute('y')                
+
+    return output
+
+def labelDriver():
+    pass
+    
+def setPadPour(pour, spacing='1'):
+    if str(pour) == 'hatch':
+        return change_spacing(spacing) + \
+            change_pour(pour)
+    else: return change_pour(pour)
+    
+def switchToBoard():
+    return edit('.brd')
+
+def switchToSchematic():
+    return edit('.sch')
+
+def switchToSheet(x):
+    return edit('.s' + str(x))
+
+def drawBox(w, h, l=20, width=0.01):
+    return layer(l) + \
+        wire(-w/2,-h/2,w/2,-h/2, width) + \
+        wire(w/2,-h/2,w/2,h/2, width) + \
+        wire(w/2,h/2,-w/2,h/2, width) + \
+        wire(-w/2,h/2,-w/2,-h/2, width)
+
+def drawBoxAtLocation(x, y, w, h, l=20, width=0.01):
+    return layer(l) + \
+        wire(-w/2+x, -h/2+y, w/2+x, -h/2+y, width) + \
+        wire(w/2+x, -h/2+y, w/2+x, h/2+y, width) + \
+        wire(w/2+x, h/2+y, -w/2+x, h/2+y, width) + \
+        wire(-w/2+x, h/2+y, -w/2+x, -h/2+y, width)
+        
 ''' EXPLICIT EAGLE FUNCTIONS '''
 
 #def add(dev, lib, r='0', x=0, y=0):
     #return ('ADD ' + str(dev) + '@' + str(lib) + ' R' + str(r) + ' (' + str(x) + ' ' + str(y) + ')\r\n')
 
 def add(name, pkg, lib, r='0', x=0, y=0):
-    return ("ADD '" + str(name) + "' " + str(pkg) + "[@" + str(lib) + "]\r\n")
-    click('left', x, y)
+    return "ADD '" + str(name) + "' " + str(pkg) + "[@" + str(lib) + "]\r\n" + \
+        click('left', x, y)
 
 def addPkg(pkg, lib, r='0', x=0, y=0):
-    return ('add '+str(pkg)+'@'+str(lib)+' R'+str(r)+' ('+str(x)+' '+str(y)+')\r\n')
+    return 'add '+str(pkg)+'@'+str(lib)+' R'+str(r)+' ('+str(x)+' '+str(y)+')\r\n'
 
 def click(button, x=0, y=0):
     if button == 'left':
@@ -71,11 +231,11 @@ def create_pad(w, h, r, name, x, y):
 
 def delete(x, y, button):
     if str(button).lower() == 'l':
-        return ('DELETE\r\n')
-        click('left', x, y)
+        return 'DELETE\r\n' + \
+            click('left', x, y)
     elif str(button).lower() == 'r':
-        return ('DELETE\r\n')
-        click('right', x, y)
+        return 'DELETE\r\n' + \
+            click('right', x, y)
     else:
         print 'INVALID DELETE "CLICK" PARAMETER'
 
@@ -99,11 +259,15 @@ def move(e, x, y):
     return ('MOVE ' + str(e) + ' ('+str(x)+' '+str(y)+ ')\r\n')
 
 def net(x1, y1, x2, y2, name='\b'):
-    return ('NET ' + name + '('+str(x1)+' '+str(y1)+') ('+str(x2)+' '+str(y2)+')\r\n')
+    return 'NET ' + name + '('+str(x1)+' '+str(y1)+') ('+str(x2)+' '+str(y2)+')\r\n'
 
 def openLibrary(lib):
     return ('OPEN ' + str(lib) + '\r\n')
 
+def rect(x1, y1, x2, y2, l=21):
+    return layer(l) + \
+        'RECT ('+str(x1)+' '+str(y1)+') ('+str(x2)+' '+str(y2)+')\r\n'
+    
 def remove(filename):
     return ('REMOVE ' + str(filename) + '\r\n')
 
@@ -126,7 +290,7 @@ def script(scr):
     return ('SCRIPT ' + str(scr) + '.scr\r\n')
 
 def set(parameter, value):
-    return ('SET ' + str(parameter) + ' ' + str(value) + '\r\n')
+    return 'SET ' + str(parameter) + ' ' + str(value) + '\r\n'
 
 def setWireBend(value):
     set('WIRE_BEND', value)
@@ -144,30 +308,35 @@ def setWireBend(value):
 def signal(net, part1, pin1, part2, pin2): #can only be used on board
     return ('SIGNAL ' + net + ' ' + part1 + ' ' + pin1 + ' ' + part2 + ' ' + pin2 + '\r\n')
 
-def text(string, x, y, size=1, layerNum=21, orientation=''):
-    layer(layerNum) #tDocu
-    setVectorFont()
-    grid()
-    setSize(size)
-    return ('TEXT ' + str(string) + ' ' + str(orientation) + '\r\n')
-    click('left', x, y)
+def text(string, orientation=''):
+    return 'TEXT' + str(string) + ' ' + str(orientation) + '\r\n'
+    
+def formattedText(string, x, y, size=1, layerNum=21, orientation=''):
+    return(layer(layerNum) + 
+        setVectorFont() + 
+        grid() + 
+        setSize(size) + 
+        text(string, orientation) + 
+        click('left', x, y))
 
 def update(library):
     return ('UPDATE ' + str(library) + '\r\n')
 
 def via_noNet(x, y, drill=10, unit= 'mil', diameter='0', shape='round', layer1=1, layer2=16):
-    setDrill(drill, unit)
-    return ('VIA ' + str(diameter) + ' ' + str(shape) + ' ' + str(layer1) + '-' + str(layer2) + '\r\n')
-    click('left', x, y)
-    grid()
+    return setDrill(drill, unit) + \
+        'VIA ' + str(diameter) + ' ' + str(shape) + ' ' + str(layer1) + '-' + str(layer2) + '\r\n' + \
+        click('left', x, y) + \
+        grid()
 
 def window(zoom):
     return ('WINDOW ' + str(zoom) + '\r\n')
 
 def wire(x1, y1, x2, y2, width=0.1):
-    return ('WIRE ' + str(width) +
-                ' (' + str(x1) + ' ' + str(y1) + ')'+
-                ' (' + str(x2) + ' ' + str(y2) + ')'+ '\r\n')
+    return 'WIRE ' + str(width) + \
+        ' (' + str(x1) + ' ' + str(y1) + ')' + \
+        ' (' + str(x2) + ' ' + str(y2) + ')' + '\r\n'
 
 def write(): #aka SAVE
     return ('WRITE\r\n')
+
+
